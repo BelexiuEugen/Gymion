@@ -16,7 +16,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+        window = UIWindow(windowScene: windowScene)
+        
+        let tabBarController = createTabBarController()
+        
+        window?.rootViewController = tabBarController
+        window?.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -53,3 +59,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 }
 
+extension SceneDelegate{
+    
+    func createTabBarController() -> UITabBarController {
+        let tabBarController = UITabBarController()
+        
+        let historyVC = HistoryVC()
+        historyVC.tabBarItem = UITabBarItem(title: "History", image: AppImage.history.image, tag: 0)
+        
+        let exerciseVC = ExerciseVC()
+        exerciseVC.tabBarItem = UITabBarItem(title: "Exercise", image: AppImage.exerciseList.image, tag: 1)
+        
+        let workoutsVC = WorkoutsVC()
+        workoutsVC.tabBarItem = UITabBarItem(title: "Workouts", image: AppImage.workouts.image, tag: 2)
+        
+        let progressVC = ProgressVC()
+        progressVC.tabBarItem = UITabBarItem(title: "Progress", image: AppImage.progress.image, tag: 3)
+        
+        tabBarController.viewControllers = [historyVC, exerciseVC, workoutsVC, progressVC]
+        
+        return tabBarController
+    }
+}
