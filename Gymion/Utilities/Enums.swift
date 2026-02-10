@@ -8,12 +8,22 @@
 import UIKit
 
 enum AppImage: String{
+    
     case history = "clock"
-    case exerciseList = "dumbbell"
+    case exercise = "dumbbell"
     case workouts = "plus"
     case progress = "chart.line.uptrend.xyaxis"
     
     var image: UIImage?{
         UIImage(systemName: rawValue)
+    }
+    
+    var name: String{
+        switch self {
+        case .history: return "History"
+        case .exercise: return "Exercise"
+        case .workouts: return "Workouts"
+        case .progress: return "Progress"
+        }
     }
 }

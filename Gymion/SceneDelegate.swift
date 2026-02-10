@@ -64,20 +64,25 @@ extension SceneDelegate{
     func createTabBarController() -> UITabBarController {
         let tabBarController = UITabBarController()
         
-        let historyVC = HistoryVC()
-        historyVC.tabBarItem = UITabBarItem(title: "History", image: AppImage.history.image, tag: 0)
-        
-        let exerciseVC = ExerciseVC()
-        exerciseVC.tabBarItem = UITabBarItem(title: "Exercise", image: AppImage.exerciseList.image, tag: 1)
-        
-        let workoutsVC = WorkoutsVC()
-        workoutsVC.tabBarItem = UITabBarItem(title: "Workouts", image: AppImage.workouts.image, tag: 2)
-        
-        let progressVC = ProgressVC()
-        progressVC.tabBarItem = UITabBarItem(title: "Progress", image: AppImage.progress.image, tag: 3)
-        
-        tabBarController.viewControllers = [historyVC, exerciseVC, workoutsVC, progressVC]
+        tabBarController.viewControllers = [
+            createNavBarItem(for: HistoryVC(), title: AppImage.history.name, image: AppImage.history.image, tag: 0),
+            createNavBarItem(for: ExerciseVC(), title: AppImage.exercise.name, image: AppImage.exercise.image, tag: 1),
+            createNavBarItem(for: WorkoutsVC(), title: AppImage.workouts.name, image: AppImage.workouts.image, tag: 2),
+            createNavBarItem(for: ProgressVC(), title: AppImage.progress.name, image: AppImage.progress.image, tag: 3)
+        ]
         
         return tabBarController
+    }
+    
+    func createNavBarItem(for rootVC: UIViewController, title: String, image: UIImage?, tag: Int) -> UINavigationController{
+        
+        rootVC.tabBarItem = UITabBarItem(title: title, image: image, tag: tag)
+        rootVC.title = title
+        
+        let navigationController = UINavigationController(rootViewController: rootVC)
+        
+        navigationController.navigationBar.prefersLargeTitles = true
+        
+        return navigationController
     }
 }
