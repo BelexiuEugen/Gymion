@@ -11,7 +11,7 @@ class ExerciseVC: UIViewController {
     
     
     var viewModel: ExerciseViewModel = ExerciseViewModel()
-    var exerciseTableView: UITableView!
+    var exerciseTableView: UITableView = UITableView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,11 +44,9 @@ class ExerciseVC: UIViewController {
     }
     
     func configureTableView(){
-        exerciseTableView = UITableView()
-        
-        exerciseTableView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         view.addSubview(exerciseTableView)
+        exerciseTableView.translatesAutoresizingMaskIntoConstraints = false
         
         exerciseTableView.dataSource = self
         exerciseTableView.delegate = self

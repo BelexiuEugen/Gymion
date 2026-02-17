@@ -26,4 +26,5 @@ class ExerciseViewModel {
     func deleteExercise(name: String){
         CoreDataService.shared.deleteExercise(withName: name)
     }
+    
 }

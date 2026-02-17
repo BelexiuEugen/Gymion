@@ -48,15 +48,10 @@ class CreateExcersiseVC: UIViewController {
     }
     
     func configureStack(){
-        let stackView: UIStackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.distribution = .fill
-        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let stackView: UIStackView = GymionStack(distribution: .fill)
         view.addSubview(stackView)
-        
-        let stackChilds: [UIStackView] = createStackChilds()
-        
-        stackView.addArrangedSubviews(stackChilds)
+        stackView.addArrangedSubviews(createStackChilds())
         
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: containerView.topAnchor),
@@ -68,23 +63,15 @@ class CreateExcersiseVC: UIViewController {
     }
     
     func createStackChilds() -> [UIStackView]{
-        var stackChilds: [UIStackView] = []
-        
         let topStack = createTopStack()
         
         let newExerciseSection = createNewExerciseSection()
         
-        stackChilds.append(contentsOf: [topStack, newExerciseSection])
-        
-        return stackChilds
+        return [topStack, newExerciseSection]
     }
     
     func createTopStack() -> UIStackView{
-        let stackView: UIStackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.distribution = .fill
-        stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: 5, left: 10, bottom: 0, right: 10)
+        let stackView: UIStackView = GymionStack(axis: .horizontal, distribution: .fill, layout: .topBar)
         
         let dimissButton: UIButton = createDismissButton()
         let title = createTitleLabel()
@@ -142,10 +129,7 @@ class CreateExcersiseVC: UIViewController {
     }
     
     func createNewExerciseSection() -> UIStackView{
-        let exerciseStack = UIStackView()
-        exerciseStack.axis = .vertical
-        exerciseStack.spacing = 10
-        exerciseStack.distribution = .fillEqually
+        let exerciseStack = GymionStack(distribution: .fillEqually)
         
         let nameSection = createNameSection(labelName: "Name", textField: nameTextField, textFieldName: "Add Name", tag: 1)
         let descriptionSection = createNameSection(labelName: "Description", textField: descriptioniTextField, textFieldName: "Add Description", tag: 2)
@@ -157,16 +141,9 @@ class CreateExcersiseVC: UIViewController {
     }
     
     func createNameSection(labelName: String, textField: UITextField, textFieldName: String, tag: Int) -> UIStackView{
-        let nameSection: UIStackView = UIStackView()
-        nameSection.axis = .vertical
-        nameSection.distribution = .equalSpacing
-        nameSection.isLayoutMarginsRelativeArrangement = true
-        nameSection.layoutMargins = UIEdgeInsets(top: 20, left: 10, bottom: 20, right: 10)
         
-        let nameLabel: UILabel = UILabel()
-        nameLabel.text = labelName
-        nameLabel.font = .boldSystemFont(ofSize: 16)
-        nameLabel.textAlignment = .left
+        let nameSection: UIStackView = GymionStack(layout: .normal)
+        let nameLabel: UILabel = GymionLabel(text: labelName)
         
         textField.placeholder = textFieldName
         textField.backgroundColor = .systemGray5
@@ -180,16 +157,9 @@ class CreateExcersiseVC: UIViewController {
     }
     
     func createCateogrySection() -> UIStackView{
-        let categorySection: UIStackView = UIStackView()
-        categorySection.axis = .vertical
-        categorySection.distribution = .equalSpacing
-        categorySection.isLayoutMarginsRelativeArrangement = true
-        categorySection.layoutMargins = UIEdgeInsets(top: 20, left: 10, bottom: 20, right: 10)
         
-        let nameLabel: UILabel = UILabel()
-        nameLabel.text = "Category"
-        nameLabel.font = .boldSystemFont(ofSize: 16)
-        nameLabel.textAlignment = .left
+        let categorySection: UIStackView = GymionStack(layout: .normal)
+        let nameLabel: UILabel = GymionLabel(text: "Category")
         
         let categoryPicker: UIPickerView = UIPickerView()
         categoryPicker.delegate = self
