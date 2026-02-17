@@ -6,3 +6,8 @@
 //
 
 import Foundation
+
+//protocol PersistentStore {
+//    func save(user: User)
+//    func fetchUsers() -> [User]
+//}

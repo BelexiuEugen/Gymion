@@ -27,3 +27,17 @@ enum AppImage: String{
         }
     }
 }
+
+enum AppSymbols: String{
+    case dismissButton = "x.square.fill"
+    
+    var image: UIImage?{
+        UIImage(systemName: rawValue)
+    }
+}
+
+enum ExerciseCategory: String, CaseIterable{
+    case weight = "weight"
+    case reps = "reps"
+    case duration = "duration"
+}

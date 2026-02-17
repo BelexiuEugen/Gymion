@@ -67,7 +67,6 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
     func updateSearchResults(for searchController: UISearchController) {
             guard let text = searchController.searchBar.text else { return }
             print("User is typing: \(text)")
-            // Ensure nothing in here is trying to load a Storyboard!
         }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -87,6 +86,11 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
 extension ExerciseVC{
 
     @objc private func addButtonTapped() {
-        viewModel.addNewExercise()
+        let createVC = CreateExcersiseVC()
+        
+        createVC.modalPresentationStyle = .overCurrentContext
+        createVC.modalTransitionStyle = .crossDissolve
+        
+        self.present(createVC, animated: true)
     }
 }
