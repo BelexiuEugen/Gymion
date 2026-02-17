@@ -11,6 +11,7 @@ class ExerciseVC: UIViewController {
     
     
     var viewModel: ExerciseViewModel = ExerciseViewModel()
+    var exerciseTableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,7 +44,7 @@ class ExerciseVC: UIViewController {
     }
     
     func configureTableView(){
-        let exerciseTableView = UITableView()
+        exerciseTableView = UITableView()
         
         exerciseTableView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -80,7 +81,18 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
         return cell
     }
     
-    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath){
+        if editingStyle == .delete {
+            
+            let exercise = viewModel.exercises[indexPath.row]
+            
+            viewModel.exercises.remove(at: indexPath.row)
+            viewModel.deleteExercise(name: exercise)
+            tableView.beginUpdates()
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            tableView.endUpdates()
+        }
+    }
 }
 
 extension ExerciseVC{
@@ -88,8 +100,16 @@ extension ExerciseVC{
     @objc private func addButtonTapped() {
         let createVC = CreateExcersiseVC()
         
-        createVC.modalPresentationStyle = .overCurrentContext
+        createVC.modalPresentationStyle = .overFullScreen
         createVC.modalTransitionStyle = .crossDissolve
+        
+        createVC.onDismiss = { [weak self] newValue in
+            guard let self = self else { return }
+            if newValue {
+                self.viewModel.fetchExercises()
+                self.exerciseTableView.reloadData()
+            }
+        }
         
         self.present(createVC, animated: true)
     }

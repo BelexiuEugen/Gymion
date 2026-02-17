@@ -9,23 +9,21 @@ import Foundation
 
 class ExerciseViewModel {
     
-    var exercises: [String] = ["Bench Press", "Deadlift", "Squats", "Overhead Press"]
+    var exercises: [String] = []
     
     init() {
         fetchExercises()
     }
     
-    func addNewExercise(){
-        print("Message Recived")
-        CoreDataService.shared.addTask(title: "", dueDate: .now)
-        fetchExercises()
-    }
-    
     func fetchExercises(){
+        exercises = []
         let result = CoreDataService.shared.fetchExerciseTasks()
-        print(result)
         for exercise in result {
             exercises.append(exercise.name ?? "Nothing found")
         }
+    }
+    
+    func deleteExercise(name: String){
+        CoreDataService.shared.deleteExercise(withName: name)
     }
 }

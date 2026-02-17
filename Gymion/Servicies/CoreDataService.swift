@@ -29,11 +29,11 @@ class CoreDataService {
         }
     }
     
-    func addTask(title: String, dueDate: Date) {
+    func addTask(name: String, description: String, category: String) {
         let newExercise = Excerise(context: context)
-        newExercise.category = "Workout"
-        newExercise.name = "Bench"
-        newExercise.exerciseDescription = "Just a plain description"
+        newExercise.category = category
+        newExercise.name = name
+        newExercise.exerciseDescription = description
         
         saveContext()
     }
@@ -50,5 +50,36 @@ class CoreDataService {
                 print("Fetch failed: \(error)")
                 return []
             }
+    }
+    
+    func deleteAllExercise() {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Excerise")
+        let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        
+        do {
+            try context.execute(batchDeleteRequest)
+            saveContext()
+        } catch {
+            print("Eroare la ștergere: \(error)")
+        }
+    }
+    
+    func deleteExercise(withName name: String){
+        let fetch: NSFetchRequest<Excerise> = Excerise.fetchRequest()
+        
+        fetch.predicate = NSPredicate(format: "name == %@", name)
+        
+        do{
+            let result = try context.fetch(fetch)
+            
+            for object in result {
+                context.delete(object)
+            }
+            
+            saveContext()
+            
+        } catch {
+            
+        }
     }
 }
