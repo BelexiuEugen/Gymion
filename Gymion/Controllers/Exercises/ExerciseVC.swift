@@ -64,18 +64,24 @@ class ExerciseVC: UIViewController {
 
 extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResultsUpdating{
     func updateSearchResults(for searchController: UISearchController) {
-            guard let text = searchController.searchBar.text else { return }
-            print("User is typing: \(text)")
+        guard let text = searchController.searchBar.text else { return }
+        
+        if text.isEmpty {
+            viewModel.filteredExercises = viewModel.exercises
+        } else {
+            viewModel.updateSearchingRange(searchText: text)
         }
+        exerciseTableView.reloadData()
+    }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.exercises.count
+        return viewModel.filteredExercises.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) 
         
-        cell.textLabel?.text = viewModel.exercises[indexPath.row]
+        cell.textLabel?.text = viewModel.filteredExercises[indexPath.row]
         return cell
     }
     

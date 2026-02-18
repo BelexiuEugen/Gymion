@@ -9,10 +9,19 @@ import UIKit
 
 class CreateExcersiseVC: UIViewController {
     
-    private let nameTextField: UITextField = UITextField()
-    private let descriptioniTextField: UITextField = UITextField()
-    private let categoryTextField: UITextField = UITextField()
+    private let textFields: [UITextField] = [
+        GymionTextField(placeholder: "Add Name", backgroundColor: .systemGray5, borderStyle: .roundedRect, returnKeyType: .done),
+        GymionTextField(placeholder: "Add Description", backgroundColor: .systemGray5, borderStyle: .roundedRect, returnKeyType: .done),
+        GymionTextField(placeholder: "Select Category", backgroundColor: .systemGray5, borderStyle: .roundedRect, returnKeyType: .done)
+    ]
+    
+    private var saveButton: UIButton? = nil
+    
     private let viewModel = CreateExerciseViewModel()
+    
+    private var isReady: Bool{
+        return textFields.allSatisfy{ !($0.text?.isEmpty ?? true) }
+    }
     
     var onDismiss: ((Bool) -> Void)?
     
@@ -27,7 +36,27 @@ class CreateExcersiseVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        saveButton = GymionButton(style: .saving, action: self.saveNewExercise())
+        saveButton?.isEnabled = false
         configure()
+        loadTargetsOnTextFields()
+    }
+    
+    func loadTargetsOnTextFields(){
+        for textField in textFields {
+            textField.addTarget(self, action: #selector(checkIfReady), for: .editingChanged)
+        }
+    }
+    
+    @objc func checkIfReady(){
+        if textFields.allSatisfy({ !($0.text?.isEmpty ?? true)}){
+            saveButton?.isEnabled = true
+        } else {
+            saveButton?.isEnabled = false
+        }
+      
+        
+        
     }
     
     func configure(){
@@ -73,9 +102,10 @@ class CreateExcersiseVC: UIViewController {
     func createTopStack() -> UIStackView{
         let stackView: UIStackView = GymionStack(axis: .horizontal, distribution: .fill, layout: .topBar)
         
-        let dimissButton: UIButton = createDismissButton()
-        let title = createTitleLabel()
-        let saveButton: UIButton = createSaveButton()
+        let dimissButton: UIButton = GymionButton(style: .dismising, action: self.dismissView())
+        let title = GymionLabel(text: "Create New Exercise", textAlignment: .center)
+        
+        guard let saveButton else { return stackView }
         
         stackView.addArrangedSubviews(dimissButton, title, saveButton)
         
@@ -85,109 +115,45 @@ class CreateExcersiseVC: UIViewController {
         return stackView
     }
     
-    func createDismissButton() -> UIButton{
-        let dismissButton: UIButton = UIButton(type: .system)
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .systemGray5
-        config.baseForegroundColor = .black
-        
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .bold)
-        config.image = UIImage(systemName: "xmark", withConfiguration: symbolConfig)
-        config.cornerStyle = .large
-        
-        dismissButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(dismissButton)
-        
-        dismissButton.configuration = config
-        dismissButton.setContentHuggingPriority(.required, for: .horizontal)
-        dismissButton.addTarget(self, action: #selector(dismissView), for: .touchUpInside)
-        
-        return dismissButton
-    }
-    
-    func createTitleLabel() -> UILabel{
-        let title = UILabel()
-        title.text = "Create New Exercise"
-        title.font = .boldSystemFont(ofSize: 16)
-        title.textAlignment = .center
-        return title
-    }
-    
-    func createSaveButton() -> UIButton{
-        let saveButton: UIButton = UIButton(type: .system)
-        saveButton.setTitle("Save", for: .normal)
-        saveButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
-        saveButton.titleColor(for: .normal)
-        saveButton.addTarget(self, action: #selector(saveNewExercise), for: .touchUpInside)
-        
-        saveButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(saveButton)
-        saveButton.setContentHuggingPriority(.required, for: .horizontal)
-        
-        return saveButton
-    }
-    
     func createNewExerciseSection() -> UIStackView{
         let exerciseStack = GymionStack(distribution: .fillEqually)
         
-        let nameSection = createNameSection(labelName: "Name", textField: nameTextField, textFieldName: "Add Name", tag: 1)
-        let descriptionSection = createNameSection(labelName: "Description", textField: descriptioniTextField, textFieldName: "Add Description", tag: 2)
-        let cateogorySection = createCateogrySection()
+        let nameSection = createNameSection(labelName: "Name", textField: textFields[0], addPicker: false)
+        let descriptionSection = createNameSection(labelName: "Description", textField: textFields[1], addPicker: false)
+        let cateogorySection = createNameSection(labelName: "Category", textField: textFields[2], addPicker: true)
         
         exerciseStack.addArrangedSubviews(nameSection, descriptionSection, cateogorySection)
         
         return exerciseStack
     }
     
-    func createNameSection(labelName: String, textField: UITextField, textFieldName: String, tag: Int) -> UIStackView{
+    func createNameSection(labelName: String, textField: UITextField, addPicker: Bool) -> UIStackView{
         
         let nameSection: UIStackView = GymionStack(layout: .normal)
         let nameLabel: UILabel = GymionLabel(text: labelName)
-        
-        textField.placeholder = textFieldName
-        textField.backgroundColor = .systemGray5
-        textField.borderStyle = .roundedRect
         textField.delegate = self
-        textField.returnKeyType = .done
-        
         nameSection.addArrangedSubviews(nameLabel, textField)
         
-        return nameSection
-    }
-    
-    func createCateogrySection() -> UIStackView{
-        
-        let categorySection: UIStackView = GymionStack(layout: .normal)
-        let nameLabel: UILabel = GymionLabel(text: "Category")
+        guard addPicker else { return nameSection }
         
         let categoryPicker: UIPickerView = UIPickerView()
         categoryPicker.delegate = self
         categoryPicker.dataSource = self
         
-
-        categoryTextField.placeholder = ExerciseCategory.allCases.first?.rawValue
-        categoryTextField.inputView = categoryPicker
-        categoryTextField.backgroundColor = .systemGray5
-        categoryTextField.borderStyle = .roundedRect
+        textField.inputView = categoryPicker
         
-        categorySection.addArrangedSubviews(nameLabel, categoryTextField)
-        
-        return categorySection
-        
+        return nameSection
     }
 
 }
 
-extension CreateExcersiseVC: UITextFieldDelegate{
+extension CreateExcersiseVC: UIPickerViewDelegate, UIPickerViewDataSource, UITextFieldDelegate{
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        // Spune-i text field-ului să renunțe la focus (închide tastatura)
         textField.resignFirstResponder()
         return true
     }
-}
-
-extension CreateExcersiseVC: UIPickerViewDelegate, UIPickerViewDataSource{
+    
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         1
     }
@@ -201,7 +167,8 @@ extension CreateExcersiseVC: UIPickerViewDelegate, UIPickerViewDataSource{
     }
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        categoryTextField.text = ExerciseCategory.allCases[row].rawValue
+        textFields[2].text = ExerciseCategory.allCases[row].rawValue
+        self.checkIfReady()
     }
 }
 
@@ -215,9 +182,9 @@ extension CreateExcersiseVC{
     
     @objc func saveNewExercise(){
         guard
-            let exerciseName = nameTextField.text,
-            let descriptionName = descriptioniTextField.text,
-            let categoryName = categoryTextField.text
+            let exerciseName = textFields[0].text,
+            let descriptionName = textFields[1].text,
+            let categoryName = textFields[2].text
         else { return }
         
         viewModel.createExercise(name: exerciseName, description: descriptionName, category: categoryName)
