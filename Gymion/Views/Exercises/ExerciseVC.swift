@@ -10,14 +10,35 @@ import UIKit
 class ExerciseVC: UIViewController {
     
     
-    var viewModel: ExerciseViewModel = ExerciseViewModel()
+    var viewModel: ExerciseViewModel
     var exerciseTableView: UITableView = UITableView()
+    
+    init(persistenceStore: PersistenceStore){
+        viewModel = ExerciseViewModel(persistenceStore: persistenceStore)
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         definesPresentationContext = true
-        
+        setupBinding()
         configure()
+    }
+    
+    func setupBinding(){
+        viewModel.onError = { [weak self] message in
+            self?.showAlert(message: message)
+        }
+    }
+    
+    func showAlert(message: String){
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ok", style: .default))
+        present(alert, animated: true)
     }
     
     func configure(){
@@ -90,11 +111,14 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
             
             let exercise = viewModel.exercises[indexPath.row]
             
-            viewModel.exercises.remove(at: indexPath.row)
-            viewModel.deleteExercise(name: exercise)
-            tableView.beginUpdates()
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-            tableView.endUpdates()
+            viewModel.deleteExercise(name: exercise) {[weak self] value in
+                guard let self, value else { return }
+                viewModel.exercises.remove(at: indexPath.row)
+                viewModel.filteredExercises.remove(at: indexPath.row)
+                tableView.beginUpdates()
+                tableView.deleteRows(at: [indexPath], with: .automatic)
+                tableView.endUpdates()
+            }
         }
     }
 }
@@ -102,7 +126,7 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
 extension ExerciseVC{
 
     @objc private func addButtonTapped() {
-        let createVC = CreateExcersiseVC()
+        let createVC = CreateExcersiseVC(persistenceStore: viewModel.persistenceStore)
         
         createVC.modalPresentationStyle = .overFullScreen
         createVC.modalTransitionStyle = .crossDissolve

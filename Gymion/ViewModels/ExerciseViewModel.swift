@@ -11,31 +11,44 @@ class ExerciseViewModel {
     
     var exercises: [String] = []
     var filteredExercises: [String] = []
+    let persistenceStore: PersistenceStore
+    var onError: ((String) -> Void)?
     
-    init() {
+    init(persistenceStore: PersistenceStore) {
+        self.persistenceStore = persistenceStore
         fetchExercises()
     }
     
     func fetchExercises(){
         exercises = []
-        let result = CoreDataService.shared.fetchExerciseTasks()
-        for exercise in result {
-            exercises.append(exercise.name ?? "Nothing found")
+        
+        do{
+            let result = try persistenceStore.fetchExercises()
+            exercises = result.map{ $0.name ?? "No Exercise Found"}
+        }catch let error as PersistenceStoreError{
+            onError?(error.errorDescription)
+        } catch {
+            onError?(PersistenceStoreError.restartTheApp.errorDescription)
         }
         filteredExercises = exercises
     }
     
-    func deleteExercise(name: String){
-        CoreDataService.shared.deleteExercise(withName: name)
+    func deleteExercise(name: String, result: @escaping (Bool) -> Void){
+        
+        do{
+            try persistenceStore.deleteExercise(withName: name)
+            result(true)
+        }catch let error as PersistenceStoreError{
+            onError?(error.errorDescription)
+        }catch{
+            onError?(PersistenceStoreError.restartTheApp.errorDescription)
+        }
+        
+        result(false)
     }
     
     func updateSearchingRange(searchText: String){
-        filteredExercises = []
-        for exercise in exercises {
-            if exercise.lowercased().contains(searchText.lowercased()){
-                filteredExercises.append(exercise)
-            }
-        }
+        filteredExercises = exercises.filter { $0.lowercased().contains(searchText.lowercased())}
     }
     
 }

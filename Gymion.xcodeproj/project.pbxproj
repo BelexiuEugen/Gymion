@@ -33,7 +33,7 @@
 		0123D7072F3A0CD800CAC013 /* Exceptions for "Gymion" folder in "Gymion" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				App/Info.plist,
 			);
 			target = 0123D6DB2F3A0CD700CAC013 /* Gymion */;
 		};
@@ -291,7 +291,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XB75K2CSMC;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Gymion/Info.plist;
+				INFOPLIST_FILE = Gymion/App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -323,7 +323,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XB75K2CSMC;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Gymion/Info.plist;
+				INFOPLIST_FILE = Gymion/App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";

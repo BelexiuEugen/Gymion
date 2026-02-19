@@ -40,4 +40,9 @@ enum ExerciseCategory: String, CaseIterable{
     case weight = "weight"
     case reps = "reps"
     case duration = "duration"
+    
+}
+
+enum EntityNames: String, CaseIterable{
+    case exercise = "ExerciseEntity"
 }

@@ -17,7 +17,7 @@ class CreateExcersiseVC: UIViewController {
     
     private var saveButton: UIButton? = nil
     
-    private let viewModel = CreateExerciseViewModel()
+    private let viewModel: CreateExerciseViewModel
     
     private var isReady: Bool{
         return textFields.allSatisfy{ !($0.text?.isEmpty ?? true) }
@@ -33,6 +33,15 @@ class CreateExcersiseVC: UIViewController {
         return view
     }()
     
+    init(persistenceStore: PersistenceStore){
+        viewModel = CreateExerciseViewModel(persistentStore: persistenceStore)
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -40,6 +49,19 @@ class CreateExcersiseVC: UIViewController {
         saveButton?.isEnabled = false
         configure()
         loadTargetsOnTextFields()
+        setupBinding()
+    }
+    
+    func setupBinding(){
+        viewModel.onError = { [weak self] message in
+            self?.showAlert(message: message)
+        }
+    }
+    
+    func showAlert(message: String){
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ok", style: .default))
+        present(alert, animated: true)
     }
     
     func loadTargetsOnTextFields(){
