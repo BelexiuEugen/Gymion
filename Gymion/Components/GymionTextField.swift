@@ -24,4 +24,12 @@ class GymionTextField: UITextField {
     func configure(){
         
     }
+    
+    func setWidth(){
+        let fontAttributes = [NSAttributedString.Key.font: self.font!]
+        let digitString = "00000" // "0" is usually the widest digit in most fonts
+        let size = (digitString as NSString).size(withAttributes: fontAttributes)
+        
+        self.widthAnchor.constraint(equalToConstant: size.width).isActive = true
+    }
 }

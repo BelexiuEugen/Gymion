@@ -13,6 +13,8 @@ class GymionButton: UIButton {
         case saving
         case dismising
         case adding
+        case addExercise
+        case addSet
     }
     
     private var action: UIAction
@@ -23,16 +25,21 @@ class GymionButton: UIButton {
             action()
         }
         super.init(frame: .zero)
-        
-        self.baseConfiguration()
+        self.translatesAutoresizingMaskIntoConstraints = false
         
         switch style {
         case .saving:
             configureSavingButton()
+            self.baseConfiguration()
         case .dismising:
             confiugreDismissingButton()
+            self.baseConfiguration()
         case .adding:
             print("nothing implemented")
+        case .addExercise:
+            configureAddExercise()
+        case .addSet:
+            configureAddSet()
         }
     }
     
@@ -42,7 +49,6 @@ class GymionButton: UIButton {
     
     func baseConfiguration(){
         self.setContentHuggingPriority(.required, for: .horizontal)
-        self.translatesAutoresizingMaskIntoConstraints = false
     }
     
     func configureAction(action: @autoclosure @escaping () -> Void){
@@ -64,6 +70,40 @@ class GymionButton: UIButton {
     func confiugreDismissingButton(){
         let config = createSettingsForDismissButton()
         self.configuration = config
+        self.addAction(action, for: .touchUpInside)
+    }
+    
+    func configureAddExercise(){
+//        self.setTitle("Add Exercise", for: .normal)
+        
+        var config = UIButton.Configuration.filled()
+        config.cornerStyle = .medium
+        config.baseBackgroundColor = .lightBlue
+        config.baseForegroundColor = .darkBlue
+        
+        var container = AttributeContainer()
+        container.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        
+        config.attributedTitle = AttributedString("Add Exercise", attributes: container)
+        
+        self.configuration = config
+        
+        self.addAction(action, for: .touchUpInside)
+    }
+    
+    func configureAddSet(){
+        var config = UIButton.Configuration.filled()
+        config.cornerStyle = .large
+        config.baseForegroundColor = .black
+        config.baseBackgroundColor = .systemGray5
+        
+        var container = AttributeContainer()
+        container.font = UIFont.systemFont(ofSize: 13, weight: .bold)
+        
+        config.attributedTitle = AttributedString("+ Add Set (2:00)", attributes: container)
+        
+        self.configuration = config
+        
         self.addAction(action, for: .touchUpInside)
     }
 
