@@ -9,7 +9,16 @@ import UIKit
 
 class CreateWorkoutVC: UIViewController {
 
-    let bodyStack: GymionStack = GymionStack()
+    var workoutTable: UITableView = UITableView()
+    let viewModel = CreateWorkoutViewModel()
+    
+    init(){
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,53 +59,42 @@ class CreateWorkoutVC: UIViewController {
     }
     
     func configureBody() {
-        // Outer vertical stack view
-        let outerStack = GymionStack()
-        view.addSubview(outerStack)
+    
+        workoutTable = UITableView(frame: .zero, style: .grouped)
+        workoutTable.delegate = self
+        workoutTable.dataSource = self
+        workoutTable.heightAnchor.constraint(equalToConstant: 400).isActive = true
+        workoutTable.separatorStyle = .none
+        workoutTable.dragInteractionEnabled = true
+        workoutTable.dragDelegate = self
+        workoutTable.dropDelegate = self
+        workoutTable.translatesAutoresizingMaskIntoConstraints = false
+        workoutTable.backgroundColor = .clear
+        
+        let tableLabel = GymionLabel(text: "New Template", textAlignment: .left, style: .bigTitle)
+        workoutTable.tableHeaderView = tableLabel.addContainer(width: view.frame.width, containerHeight: 60, viewHeight: 40)
+        
 
-        // Scroll view
-        let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.alwaysBounceVertical = true
-        outerStack.addArrangedSubview(scrollView)
-
-        // Content stack inside scroll view
-        let contentStack = GymionStack(distribution: .fill)
-        scrollView.addSubview(contentStack)
-
-        // Label aligned to upper left
-        let titleLabel = GymionLabel(text: "New Template", textAlignment: .left, style: .bigTitle)
-        contentStack.addArrangedSubview(titleLabel)
-
-        // Add some spacing below the label
-        contentStack.addArrangedSubviews(bodyStack)
-
-        // Button stretches horizontally
-        let addExerciseButton = configureAddExerciseButton()
-        contentStack.addArrangedSubview(addExerciseButton)
-
+        let fotterAddExerciseButton = configureAddExerciseButton()
+        
+        workoutTable.tableFooterView = fotterAddExerciseButton
+        
+        view.addSubview(workoutTable)
+        
         NSLayoutConstraint.activate([
-            outerStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            outerStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            outerStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            outerStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-
-            scrollView.widthAnchor.constraint(equalTo: outerStack.widthAnchor),
-            scrollView.heightAnchor.constraint(greaterThanOrEqualToConstant: 0), // Avoid ambiguity
-
-            contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            contentStack.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            contentStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor)
+            workoutTable.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+            workoutTable.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            workoutTable.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+            workoutTable.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            
+            fotterAddExerciseButton.leadingAnchor.constraint(equalTo: workoutTable.leadingAnchor),
+            fotterAddExerciseButton.trailingAnchor.constraint(equalTo: workoutTable.trailingAnchor)
         ])
     }
     
-    func configureAddExerciseButton() -> UIButton{
-        
-        let addExerciseButton = GymionButton(style: .addExercise, action: self.addNewExercise())
-        return addExerciseButton
-        
+    func configureAddExerciseButton() -> UIView {
+        let addExerciseButton = GymionButton(style: .addExercise, action: ())
+        return addExerciseButton.addContainer(width: view.frame.width, containerHeight: 60, viewHeight: 40)
     }
     
     func createDataRow() -> GymionStack{
@@ -141,27 +139,12 @@ extension CreateWorkoutVC{
     }
     
     func addNewExercise(){
-        let newExerciseExample = GymionStack(spacing: 10, layout: .onlyTopAndBottom)
+        let _ = GymionStack(spacing: 10, layout: .onlyTopAndBottom)
         
-        let exerciseName = GymionLabel(text: "Example of exercise", textAlignment: .left, style: .blueTitle)
         let dataRow = WorkoutSetRowView(setName: "Set", previousLabel: "Previous", weight: " Kg ", reps: "Reps", isHeader: true)
         let setsStack = GymionStack(spacing: 5, layout: .onlyTopAndBottom)
         setsStack.addArrangedSubviews(dataRow)
         createSetRow(bodyStack: setsStack)
-        
-        let setsTable = UITableView()
-        setsTable.delegate = self
-        setsTable.dataSource = self
-        setsTable.heightAnchor.constraint(equalToConstant: 400).isActive = true
-        setsTable.separatorStyle = .none
-        setsTable.dragInteractionEnabled = true
-        setsTable.dragDelegate = self
-        setsTable.dropDelegate = self
-        
-        let newSetButton = GymionButton(style: .addSet, action: self.createSetRow(bodyStack: setsStack))
-        
-        newExerciseExample.addArrangedSubviews(exerciseName, setsTable, newSetButton)
-        bodyStack.addArrangedSubviews(newExerciseExample)
     }
     
     @objc func saveWorkout(){
@@ -170,29 +153,76 @@ extension CreateWorkoutVC{
 }
 
 extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableViewDragDelegate, UITableViewDropDelegate{
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        print("I have this sections: \(viewModel.exerciseEntries.count)")
+        return viewModel.exerciseEntries.count
+    }
+    
+    // Header
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let headerStack = GymionStack(axis: .vertical, spacing: 8)
+        let label = GymionLabel(text: "Example of exercise", textAlignment: .left, style: .blueTitle)
+        let row = WorkoutSetRowView(setName: "Sets", previousLabel: "Previous", weight: "KG", reps: "Reps", isHeader: true)
+        headerStack.addArrangedSubviews(label, row)
+
+        return headerStack.addContainer(width: tableView.frame.width, containerHeight: 80, viewHeight: 70)
+    }
+    
+    //Footer
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        
+        let button = GymionButton(style: .addSet, action: ())
+        button.tag = section
+        
+        return button.addContainer(width: tableView.frame.width, containerHeight: 70, viewHeight: 30)
+    }
+    
+    // Footer Height
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 70
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 80
+    }
+    
+    // Drag
     func tableView(_ tableView: UITableView, itemsForBeginning session: any UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
         let dragItem = UIDragItem(itemProvider: NSItemProvider())
         return [dragItem]
     }
     
+    // Drop
     func tableView(_ tableView: UITableView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UITableViewDropProposal{
         return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
     }
+    
     
     func tableView(_ tableView: UITableView, performDropWith coordinator: any UITableViewDropCoordinator) {
 //        return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
     }
     
+    
+    // Section Size
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10
+        let sectionNumber = viewModel.exerciseEntries[section].sets.count
+        return sectionNumber
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         cell.selectionStyle = .none
         
+        let section = indexPath.section
+        let row = indexPath.row
         
-        let rowView = WorkoutSetRowView(setName: "1", previousLabel: "80 kg x 12", weight: "KG", reps: "Reps")
+        let setName = String(viewModel.exerciseEntries[section].sets[row].setNumber)
+        let weight = String(viewModel.exerciseEntries[section].sets[row].weight)
+        let reps = String(viewModel.exerciseEntries[section].sets[row].reps)
+        let previousLabel = weight + " x " + reps
+        
+        let rowView = WorkoutSetRowView(setName: setName, previousLabel: previousLabel, weight: weight, reps: reps)
         rowView.translatesAutoresizingMaskIntoConstraints = false
         
         cell.contentView.addSubview(rowView)
@@ -207,6 +237,8 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
         return cell
     }
     
+    
+    // Delete Action
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
         let deleteAction = UIContextualAction(style: .normal, title: "Delete") { (action, view, completionHandler) in
@@ -222,12 +254,15 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
         return configuration
     }
     
-    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        return true
-    }
     
+    // if it's possible to move row
+//    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+//        return true
+//    }
+    
+    // When Row Moved
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        
+        print("I was moved from ", sourceIndexPath, " To ", destinationIndexPath)
     }
     
 }

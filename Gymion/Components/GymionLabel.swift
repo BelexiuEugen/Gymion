@@ -44,7 +44,7 @@ class GymionLabel: UILabel {
     }
     
     func configureBigTitle(){
-        self.font = .boldSystemFont(ofSize: 25)
+        self.font = .systemFont(ofSize: 23, weight: .bold)
     }
     
     func configureNormalLabel(){
@@ -52,7 +52,7 @@ class GymionLabel: UILabel {
     }
         
     func configureBlueTitle(){
-        self.font = .boldSystemFont(ofSize: 18)
+        self.font = .systemFont(ofSize: 18, weight: .bold)
         self.textColor = .darkBlue
     }
     

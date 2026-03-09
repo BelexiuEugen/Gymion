@@ -48,14 +48,17 @@ class WorkoutSetRowView: UIView {
     
     private func setupView() {
         
+        let stackView = GymionStack(axis: .horizontal, spacing: 8, distribution: .fill, alignment: .fill)
+        stackView.addArrangedSubviews(setNumberLabel, previousLabel, weightTextField, repsTextField)
+        
         if isHeader {
             clearBackgrounds()
+            addSubview(stackView)
+            configureStackView(stack: stackView)
+            return
         }
         
         let horizontalStack = GymionStack(axis: .vertical, spacing: 8)
-        let stackView = GymionStack(axis: .horizontal, spacing: 8, distribution: .fill, alignment: .fill)
-        
-        stackView.addArrangedSubviews(setNumberLabel, previousLabel, weightTextField, repsTextField)
         
         horizontalStack.addArrangedSubviews(stackView, RestTimerDividerView())
 
@@ -68,6 +71,24 @@ class WorkoutSetRowView: UIView {
             horizontalStack.topAnchor.constraint(equalTo: topAnchor),
             horizontalStack.bottomAnchor.constraint(equalTo: bottomAnchor),
             stackView.heightAnchor.constraint(equalToConstant: 27),
+            
+            setNumberLabel.widthAnchor.constraint(equalToConstant: 35),
+            weightTextField.widthAnchor.constraint(equalToConstant: 140),
+            repsTextField.widthAnchor.constraint(equalToConstant: 140),
+        ])
+        
+    }
+}
+
+extension WorkoutSetRowView {
+    func configureStackView(stack: UIStackView){
+        NSLayoutConstraint.activate([
+
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stack.topAnchor.constraint(equalTo: topAnchor),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            stack.heightAnchor.constraint(equalToConstant: 27),
             
             setNumberLabel.widthAnchor.constraint(equalToConstant: 35),
             weightTextField.widthAnchor.constraint(equalToConstant: 140),
