@@ -37,27 +37,27 @@ class CoreDataService: PersistenceStore {
         }
     }
     
-    func add(exercise: Exercise) throws{
+    func add(exercise: WorkoutExercise) throws{
     
-        let newExercise = ExerciseEntity(context: context)
+        let newExercise = WorkoutExerciseEntity(context: context)
         newExercise.category = exercise.category
         newExercise.name = exercise.name
-        newExercise.exerciseDescription = exercise.exerciseDescription
+        newExercise.details = exercise.details
         
         try saveContext(specificError: .errorSaving)
     }
     
-    func fetchExercises() throws -> [Exercise]{
+    func fetchExercises() throws -> [WorkoutExercise]{
 
-        let request = NSFetchRequest<ExerciseEntity>(entityName: EntityNames.exercise.rawValue)
+        let request = NSFetchRequest<WorkoutExerciseEntity>(entityName: EntityNames.exercise.rawValue)
             
             do {
                 let users = try context.fetch(request)
                 
-                return users.map { user -> Exercise in
-                    Exercise(name: user.name,
+                return users.map { user -> WorkoutExercise in
+                    WorkoutExercise(name: user.name ?? "No Exercise Found",
                              category: user.category,
-                             exerciseDescription: user.exerciseDescription)
+                                    details: user.details)
                 }
 
             } catch {
@@ -80,7 +80,7 @@ class CoreDataService: PersistenceStore {
     }
     
     func deleteExercise(withName name: String) throws{
-        let fetch: NSFetchRequest<ExerciseEntity> = ExerciseEntity.fetchRequest()
+        let fetch: NSFetchRequest<WorkoutExerciseEntity> = WorkoutExerciseEntity.fetchRequest()
         
         fetch.predicate = NSPredicate(format: "name == %@", name)
         

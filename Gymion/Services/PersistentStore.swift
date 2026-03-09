@@ -8,8 +8,8 @@
 import Foundation
 
 protocol PersistenceStore {
-    func add(exercise: Exercise) throws
-    func fetchExercises() throws -> [Exercise]
+    func add(exercise: WorkoutExercise) throws
+    func fetchExercises() throws -> [WorkoutExercise]
     func deleteAllExercises() throws
     func deleteExercise(withName name: String) throws
 }

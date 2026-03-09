@@ -24,7 +24,7 @@ class ExerciseViewModel {
         
         do{
             let result = try persistenceStore.fetchExercises()
-            exercises = result.map{ $0.name ?? "No Exercise Found"}
+            exercises = result.map{ $0.name }
         }catch let error as PersistenceStoreError{
             onError?(error.errorDescription)
         } catch {

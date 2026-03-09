@@ -12,12 +12,15 @@ class GymionLabel: UILabel {
     enum GymionLabelStyle {
         case bigTitle
         case blueTitle
+        case setNumber
     }
     
-    init(text: String, textAlignment: NSTextAlignment = .left, style: GymionLabelStyle? = nil) {
+    init(text: String, textAlignment: NSTextAlignment = .left, font: UIFont = .boldSystemFont(ofSize: 16), textColor: UIColor = .label, style: GymionLabelStyle? = nil) {
         super.init(frame: .zero)
         self.text = text
         self.textAlignment = textAlignment
+        self.font = font
+        self.textColor = textColor
         configure(style: style)
     }
     
@@ -35,6 +38,8 @@ class GymionLabel: UILabel {
             configureBlueTitle()
         case nil:
             configureNormalLabel()
+        case .setNumber:
+            configureSetNumber()
         }
     }
     
@@ -43,16 +48,12 @@ class GymionLabel: UILabel {
     }
     
     func configureNormalLabel(){
-        self.font = .boldSystemFont(ofSize: 16)
+        
     }
         
     func configureBlueTitle(){
         self.font = .boldSystemFont(ofSize: 18)
         self.textColor = .darkBlue
-    }
-    
-    func setColor(_ color: UIColor) {
-        self.textColor = color
     }
     
     func setWidth() {
@@ -61,5 +62,16 @@ class GymionLabel: UILabel {
         let size = (digitString as NSString).size(withAttributes: fontAttributes)
         
         self.widthAnchor.constraint(equalToConstant: size.width).isActive = true
+    }
+    
+    func configureSetNumber(){
+        self.backgroundColor = UIColor.systemGray6
+        self.layer.cornerRadius = 8
+        self.clipsToBounds = true
+        self.font = .boldSystemFont(ofSize: 16)
+    }
+    
+    func configurePreviousSetNumber(){
+        
     }
 }

@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct Exercise{
-    let name: String?
-    let category: String?
-    let exerciseDescription: String?
-}
+//struct Exercise{
+//    let name: String?
+//    let category: String?
+//    let exerciseDescription: String?
+//}
 

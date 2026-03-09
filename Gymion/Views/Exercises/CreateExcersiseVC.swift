@@ -209,7 +209,7 @@ extension CreateExcersiseVC{
             let categoryName = textFields[2].text
         else { return }
         
-        viewModel.createExercise(name: exerciseName, description: descriptionName, category: categoryName)
+        viewModel.createExercise(name: exerciseName, details: descriptionName, category: categoryName)
         
         self.dismiss(animated: true){
             self.onDismiss?(true)

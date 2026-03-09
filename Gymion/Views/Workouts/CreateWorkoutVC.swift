@@ -100,32 +100,23 @@ class CreateWorkoutVC: UIViewController {
     }
     
     func createDataRow() -> GymionStack{
-        let dataRow = GymionStack(axis: .horizontal)
+        let dataRow = GymionStack(axis: .horizontal, spacing: 5, distribution: .fill)
         
-        let setLabel = GymionLabel(text: "Set")
-        let PreviousLabel = GymionLabel(text: "Previous")
-        let weightLabel = GymionLabel(text: "Weight")
-        let Reps = GymionLabel(text: "Reps")
+        let setLabel = GymionLabel(text: "Set", textAlignment: .center)
+        let previousLabel = GymionLabel(text: "Previous", textAlignment: .center)
+        let weightLabel = GymionLabel(text: "Weight", textAlignment: .center)
+        let repsLabel = GymionLabel(text: "Reps", textAlignment: .center)
         
-        dataRow.addArrangedSubviews(setLabel, PreviousLabel, weightLabel, Reps)
+        dataRow.addArrangedSubviews(setLabel, previousLabel, weightLabel, repsLabel)
         
         return dataRow
     }
     
     func createSetRow(bodyStack: UIStackView){
-        let setRow = GymionStack(axis: .horizontal)
+
+        let myView = WorkoutSetRowView(setName: "1", previousLabel: "80 Kg x 12", weight: "20", reps: "20")
         
-        let setNumber = GymionLabel(text: "1")
-        let previous = GymionLabel(text: "20 x 15 kg")
-        previous.tintColor = .systemGray5
-        let weightText = GymionTextField(placeholder: nil, backgroundColor: .systemGray5, borderStyle: .roundedRect, returnKeyType: .next)
-        weightText.setWidth()
-        let repsText = GymionTextField(placeholder: nil, backgroundColor: .systemGray5, borderStyle: .roundedRect, returnKeyType: .done)
-        repsText.setWidth()
-        
-        setRow.addArrangedSubviews(setNumber, previous, weightText, repsText)
-        
-        bodyStack.addArrangedSubview(setRow)
+        bodyStack.addArrangedSubview(myView)
     }
     
     func createNewSetButton() -> GymionButton{
@@ -153,18 +144,91 @@ extension CreateWorkoutVC{
         let newExerciseExample = GymionStack(spacing: 10, layout: .onlyTopAndBottom)
         
         let exerciseName = GymionLabel(text: "Example of exercise", textAlignment: .left, style: .blueTitle)
-        let dataRow = createDataRow()
+        let dataRow = WorkoutSetRowView(setName: "Set", previousLabel: "Previous", weight: " Kg ", reps: "Reps", isHeader: true)
         let setsStack = GymionStack(spacing: 5, layout: .onlyTopAndBottom)
+        setsStack.addArrangedSubviews(dataRow)
         createSetRow(bodyStack: setsStack)
+        
+        let setsTable = UITableView()
+        setsTable.delegate = self
+        setsTable.dataSource = self
+        setsTable.heightAnchor.constraint(equalToConstant: 400).isActive = true
+        setsTable.separatorStyle = .none
+        setsTable.dragInteractionEnabled = true
+        setsTable.dragDelegate = self
+        setsTable.dropDelegate = self
         
         let newSetButton = GymionButton(style: .addSet, action: self.createSetRow(bodyStack: setsStack))
         
-        newExerciseExample.addArrangedSubviews(exerciseName, dataRow, setsStack, newSetButton)
+        newExerciseExample.addArrangedSubviews(exerciseName, setsTable, newSetButton)
         bodyStack.addArrangedSubviews(newExerciseExample)
     }
     
     @objc func saveWorkout(){
         
     }
+}
+
+extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableViewDragDelegate, UITableViewDropDelegate{
+    func tableView(_ tableView: UITableView, itemsForBeginning session: any UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        let dragItem = UIDragItem(itemProvider: NSItemProvider())
+        return [dragItem]
+    }
+    
+    func tableView(_ tableView: UITableView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UITableViewDropProposal{
+        return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+    }
+    
+    func tableView(_ tableView: UITableView, performDropWith coordinator: any UITableViewDropCoordinator) {
+//        return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 10
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell()
+        cell.selectionStyle = .none
+        
+        
+        let rowView = WorkoutSetRowView(setName: "1", previousLabel: "80 kg x 12", weight: "KG", reps: "Reps")
+        rowView.translatesAutoresizingMaskIntoConstraints = false
+        
+        cell.contentView.addSubview(rowView)
+        
+        // Pin it to the edges of the cell
+        NSLayoutConstraint.activate([
+            rowView.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor),
+            rowView.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor),
+            rowView.heightAnchor.constraint(equalToConstant: 40)
+        ])
+        
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let deleteAction = UIContextualAction(style: .normal, title: "Delete") { (action, view, completionHandler) in
+            
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            completionHandler(true)
+        }
+        
+        deleteAction.backgroundColor = .systemRed
+        
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
+        configuration.performsFirstActionWithFullSwipe = true
+        return configuration
+    }
+    
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        
+    }
+    
 }
 

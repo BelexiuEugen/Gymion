@@ -16,9 +16,9 @@ class CreateExerciseViewModel {
         self.persistentStore = persistentStore
     }
     
-    func createExercise(name: String, description: String, category: String){
+    func createExercise(name: String, details: String, category: String){
         
-        let exercise = Exercise(name: name, category: category, exerciseDescription: description)
+        let exercise = WorkoutExercise(name: name, category: category, details: details)
         
         do {
             try persistentStore.add(exercise: exercise)

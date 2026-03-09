@@ -13,6 +13,7 @@ class GymionStack: UIStackView {
         case topBar
         case normal
         case onlyTopAndBottom
+        case rowPadding
         
         var value: UIEdgeInsets{
             switch self {
@@ -22,14 +23,17 @@ class GymionStack: UIStackView {
                 UIEdgeInsets(top: 5, left: 10, bottom: 0, right: 10)
             case .onlyTopAndBottom:
                 UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
+            case .rowPadding:
+                UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
             }
         }
     }
     
-    init(axis: NSLayoutConstraint.Axis = .vertical, spacing: CGFloat = 0, distribution: UIStackView.Distribution = .equalSpacing, layout: Margins? = nil){
+    init(axis: NSLayoutConstraint.Axis = .vertical, spacing: CGFloat = 0, distribution: UIStackView.Distribution = .equalSpacing, alignment: UIStackView.Alignment = .fill, layout: Margins? = nil){
         super.init(frame: .zero)
         self.axis = axis
         self.distribution = distribution
+        self.alignment = alignment
         self.spacing = spacing
         configure(layout: layout)
     }
