@@ -14,14 +14,14 @@ struct WorkoutExercise {
 }
 
 struct ExerciseSet {
-    let setNumber: Int
+    var setNumber: Int
     let weight: Double
     let reps: Int
 }
 
 struct ExerciseEntry {
     let exercise: WorkoutExercise
-    let sets: [ExerciseSet]
+    var sets: [ExerciseSet]
 }
 
 struct Workout {

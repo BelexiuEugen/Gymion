@@ -8,7 +8,7 @@
 import UIKit
 
 class CreateWorkoutVC: UIViewController {
-
+    
     var workoutTable: UITableView = UITableView()
     let viewModel = CreateWorkoutViewModel()
     
@@ -22,7 +22,7 @@ class CreateWorkoutVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         configure()
     }
     
@@ -59,7 +59,7 @@ class CreateWorkoutVC: UIViewController {
     }
     
     func configureBody() {
-    
+        
         workoutTable = UITableView(frame: .zero, style: .grouped)
         workoutTable.delegate = self
         workoutTable.dataSource = self
@@ -74,7 +74,7 @@ class CreateWorkoutVC: UIViewController {
         let tableLabel = GymionLabel(text: "New Template", textAlignment: .left, style: .bigTitle)
         workoutTable.tableHeaderView = tableLabel.addContainer(width: view.frame.width, containerHeight: 60, viewHeight: 40)
         
-
+        
         let fotterAddExerciseButton = configureAddExerciseButton()
         
         workoutTable.tableFooterView = fotterAddExerciseButton
@@ -93,8 +93,18 @@ class CreateWorkoutVC: UIViewController {
     }
     
     func configureAddExerciseButton() -> UIView {
-        let addExerciseButton = GymionButton(style: .addExercise, action: ())
+        let addExerciseButton = GymionButton(style: .addExercise, action: (self.createNewSection()))
         return addExerciseButton.addContainer(width: view.frame.width, containerHeight: 60, viewHeight: 40)
+    }
+    
+    func createNewSection() {
+        let workoutExercise = viewModel.exerciseEntries[0].exercise
+        let newEntry = ExerciseEntry(exercise: workoutExercise, sets: [])
+        Task{
+            await viewModel.exerciseEntries.append(newEntry)
+            
+            workoutTable.insertSections(IndexSet(integer: viewModel.exerciseEntries.count - 1), with: .top)
+        }
     }
     
     func createDataRow() -> GymionStack{
@@ -150,6 +160,15 @@ extension CreateWorkoutVC{
     @objc func saveWorkout(){
         
     }
+    
+    func addNewSetFor(section: Int){
+        viewModel.addSetFor(section: section)
+        
+        let indexPath = IndexPath(row: viewModel.exerciseEntries[section].sets.count - 1, section: section)
+        workoutTable.beginUpdates()
+        workoutTable.insertRows(at: [indexPath], with: .bottom)
+        workoutTable.endUpdates()
+    }
 }
 
 extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableViewDragDelegate, UITableViewDropDelegate{
@@ -172,7 +191,7 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     //Footer
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         
-        let button = GymionButton(style: .addSet, action: ())
+        let button = GymionButton(style: .addSet, action: self.addNewSetFor(section: section))
         button.tag = section
         
         return button.addContainer(width: tableView.frame.width, containerHeight: 70, viewHeight: 30)
@@ -240,15 +259,41 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     
     // Delete Action
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
-        let deleteAction = UIContextualAction(style: .normal, title: "Delete") { (action, view, completionHandler) in
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (_, _, completionHandler) in
+
+            // First, update the model synchronously if possible
+            // Remove the item from the view model for immediate consistency
+            // If your viewModel.deleteSetFor is async, we optimistically update UI and persist in background
+            // We'll call the async persistence after the animation.
             
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-            completionHandler(true)
+            // Optimistically remove from model if you have a sync API; otherwise, proceed to UI update and trust your cell configuration uses indices
+            // Here we assume your model is updated in the async call; we still animate immediately and then reload affected rows.
+            
+            Task { @MainActor in
+                await self.viewModel.deleteSetFor(section: indexPath.section, row: indexPath.row)
+                
+                
+                // Animate deletion
+                tableView.performBatchUpdates {
+                    tableView.deleteRows(at: [indexPath], with: .automatic)
+                } completion: { _ in
+                    // After deletion, reload only the rows below to update their displayed set numbers
+                    let section = indexPath.section
+                    // Compute the remaining count safely
+                    let remainingCount = self.viewModel.exerciseEntries[section].sets.count
+                    if indexPath.row < remainingCount {
+                        let affected = (indexPath.row..<(remainingCount)).map { IndexPath(row: $0, section: section) }
+                        if !affected.isEmpty {
+                            tableView.reloadRows(at: affected, with: .fade)
+                        }
+                    }
+                    completionHandler(true)
+                }
+            }
+
         }
-        
+
         deleteAction.backgroundColor = .systemRed
-        
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
         configuration.performsFirstActionWithFullSwipe = true
         return configuration
