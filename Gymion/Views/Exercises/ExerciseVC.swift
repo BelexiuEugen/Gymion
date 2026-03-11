@@ -13,6 +13,8 @@ class ExerciseVC: UIViewController {
     var viewModel: ExerciseViewModel
     var exerciseTableView: UITableView = UITableView()
     
+    var onSelect: ((WorkoutExercise) -> ())?
+    
     init(persistenceStore: PersistenceStore){
         viewModel = ExerciseViewModel(persistenceStore: persistenceStore)
         super.init(nibName: nil, bundle: nil)
@@ -102,7 +104,7 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) 
         
-        cell.textLabel?.text = viewModel.filteredExercises[indexPath.row]
+        cell.textLabel?.text = viewModel.filteredExercises[indexPath.row].name
         return cell
     }
     
@@ -111,7 +113,7 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
             
             let exercise = viewModel.exercises[indexPath.row]
             
-            viewModel.deleteExercise(name: exercise) {[weak self] value in
+            viewModel.deleteExercise(name: exercise.name) {[weak self] value in
                 guard let self, value else { return }
                 viewModel.exercises.remove(at: indexPath.row)
                 viewModel.filteredExercises.remove(at: indexPath.row)
@@ -120,6 +122,9 @@ extension ExerciseVC: UITableViewDataSource, UITableViewDelegate, UISearchResult
                 tableView.endUpdates()
             }
         }
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        onSelect?(viewModel.filteredExercises[indexPath.row])
     }
 }
 

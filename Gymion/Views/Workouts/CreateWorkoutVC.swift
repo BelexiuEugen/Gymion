@@ -10,9 +10,10 @@ import UIKit
 class CreateWorkoutVC: UIViewController {
     
     var workoutTable: UITableView = UITableView()
-    let viewModel = CreateWorkoutViewModel()
+    let viewModel: CreateWorkoutViewModel
     
-    init(){
+    init(persistenceStore: any PersistenceStore){
+        self.viewModel = CreateWorkoutViewModel(persistenceStore: persistenceStore)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -98,13 +99,17 @@ class CreateWorkoutVC: UIViewController {
     }
     
     func createNewSection() {
-        let workoutExercise = viewModel.exerciseEntries[0].exercise
-        let newEntry = ExerciseEntry(exercise: workoutExercise, sets: [])
-        Task{
-            await viewModel.exerciseEntries.append(newEntry)
-            
+        let exerciseVC = ExerciseVC(persistenceStore: viewModel.persistenceStore)
+        let stack = UINavigationController(rootViewController: exerciseVC)
+        
+        exerciseVC.onSelect = { [weak self] exercise in
+            guard let self = self else { return }
+            self.dismiss(animated: true)
+            viewModel.addNewSection(exercise: exercise)
             workoutTable.insertSections(IndexSet(integer: viewModel.exerciseEntries.count - 1), with: .top)
         }
+        
+        self.present(stack, animated: true)
     }
     
     func createDataRow() -> GymionStack{
@@ -135,7 +140,10 @@ class CreateWorkoutVC: UIViewController {
 
 extension CreateWorkoutVC{
     @objc func dismissView(){
-        
+        dismissController()
+    }
+    
+    func dismissController(){
         let transition = CATransition()
         transition.duration = 0.3
         transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -158,6 +166,8 @@ extension CreateWorkoutVC{
     }
     
     @objc func saveWorkout(){
+        viewModel.saveWorkout()
+        dismissController()
         
     }
     
@@ -181,7 +191,11 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     // Header
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let headerStack = GymionStack(axis: .vertical, spacing: 8)
-        let label = GymionLabel(text: "Example of exercise", textAlignment: .left, style: .blueTitle)
+//        let verticalStack = GymionStack(axis: .horizontal)
+        
+        let exerciseName = viewModel.exerciseEntries[section].exercise.name
+        
+        let label = GymionLabel(text: exerciseName, textAlignment: .left, style: .blueTitle)
         let row = WorkoutSetRowView(setName: "Sets", previousLabel: "Previous", weight: "KG", reps: "Reps", isHeader: true)
         headerStack.addArrangedSubviews(label, row)
 
@@ -212,6 +226,12 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
         return [dragItem]
     }
     
+    func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
+        
+        guard sourceIndexPath.section == proposedDestinationIndexPath.section else { return sourceIndexPath }
+        return proposedDestinationIndexPath
+    }
+    
     // Drop
     func tableView(_ tableView: UITableView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UITableViewDropProposal{
         return UITableViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
@@ -230,18 +250,31 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = UITableViewCell()
         cell.selectionStyle = .none
         
         let section = indexPath.section
         let row = indexPath.row
         
-        let setName = String(viewModel.exerciseEntries[section].sets[row].setNumber)
-        let weight = String(viewModel.exerciseEntries[section].sets[row].weight)
-        let reps = String(viewModel.exerciseEntries[section].sets[row].reps)
-        let previousLabel = weight + " x " + reps
         
-        let rowView = WorkoutSetRowView(setName: setName, previousLabel: previousLabel, weight: weight, reps: reps)
+        var setNameString = ""
+        var weightString = ""
+        var repsString = ""
+        var perviousLabel:String?
+        
+        var setName = viewModel.exerciseEntries[section].sets[row].setNumber
+        var weight = viewModel.exerciseEntries[section].sets[row].weight
+        var reps = viewModel.exerciseEntries[section].sets[row].reps
+        
+        if let setName, let weight, let reps {
+            setNameString = String(setName)
+            weightString = String(weight)
+            repsString = String(reps)
+            perviousLabel = weightString + " x " + repsString
+        }
+        
+        let rowView = WorkoutSetRowView(setName: setNameString, previousLabel: perviousLabel ?? "", weight: weightString, reps: repsString)
         rowView.translatesAutoresizingMaskIntoConstraints = false
         
         cell.contentView.addSubview(rowView)
@@ -307,7 +340,8 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     
     // When Row Moved
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        print("I was moved from ", sourceIndexPath, " To ", destinationIndexPath)
+        print("I was moved from: ", sourceIndexPath.row, " To: ", destinationIndexPath.row)
+//        viewModel.calculateNewPosition
     }
     
 }

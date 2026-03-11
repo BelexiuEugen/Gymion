@@ -96,4 +96,12 @@ class CoreDataService: PersistenceStore {
         
         try saveContext(specificError: .errorDeletingExercise)
     }
+    
+    func saveWorkout(workout: Workout) throws {
+//        var newWorkout = WorkoutEntity(context: context)
+//        newWorkout.isTemplate = isTemplate
+//        newWorkout.entries = workout.entries
+//        
+//        try saveContext()
+    }
 }

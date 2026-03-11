@@ -66,7 +66,7 @@ extension SceneDelegate{
         let persistenceStore:PersistenceStore = CoreDataService()
         
         tabBarController.viewControllers = [
-            createNavBarItem(for: WorkoutsVC(), title: AppImage.workouts.name, image: AppImage.workouts.image, tag: 0),
+            createNavBarItem(for: WorkoutsVC(persistenceStore: persistenceStore), title: AppImage.workouts.name, image: AppImage.workouts.image, tag: 0),
             createNavBarItem(for: HistoryVC(), title: AppImage.history.name, image: AppImage.history.image, tag: 2),
             createNavBarItem(for: ExerciseVC(persistenceStore: persistenceStore), title: AppImage.exercise.name, image: AppImage.exercise.image, tag: 1),
             createNavBarItem(for: ProgressVC(), title: AppImage.progress.name, image: AppImage.progress.image, tag: 3)

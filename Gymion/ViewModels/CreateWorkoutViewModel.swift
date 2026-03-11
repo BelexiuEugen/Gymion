@@ -10,15 +10,23 @@ import Foundation
 class CreateWorkoutViewModel{
     var exerciseEntries: [ExerciseEntry] = MockData.sampleEntries
     
-    init(){
-        
+    var persistenceStore: PersistenceStore
+    
+    init(persistenceStore: any PersistenceStore){
+        self.persistenceStore = persistenceStore
     }
     
     func addSetFor(section index: Int) {
-        let setNumber = exerciseEntries[index].sets.count
-        let weight = exerciseEntries[index].sets[setNumber - 1].weight
-        let reps = exerciseEntries[index].sets[setNumber - 1].reps
-        let newSet = ExerciseSet(setNumber: setNumber + 1, weight: weight, reps: reps)
+        
+        var newSet = ExerciseSet(setNumber: 1, weight: 0, reps: 0)
+        
+        if self.exerciseEntries[index].sets.count > 0{
+            let setNumber = exerciseEntries[index].sets.count
+            let weight = exerciseEntries[index].sets[setNumber - 1].weight
+            let reps = exerciseEntries[index].sets[setNumber - 1].reps
+            newSet = ExerciseSet(setNumber: setNumber + 1, weight: weight, reps: reps)
+        }
+
         
         exerciseEntries[index].sets.append(newSet)
     }
@@ -37,5 +45,17 @@ class CreateWorkoutViewModel{
         exerciseEntries[section].sets.removeLast()
     }
     
+    func addNewSection(exercise: WorkoutExercise) {
+        let newEntry = ExerciseEntry(exercise: exercise, sets: [])
+        exerciseEntries.append(newEntry)
+    }
+    
+    func deleteSection(section: Int) {
+        
+    }
+    
+    func saveWorkout(){
+        
+    }
     
 }

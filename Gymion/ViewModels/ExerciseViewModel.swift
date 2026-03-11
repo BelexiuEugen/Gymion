@@ -9,8 +9,8 @@ import Foundation
 
 class ExerciseViewModel {
     
-    var exercises: [String] = []
-    var filteredExercises: [String] = []
+    var exercises: [WorkoutExercise] = []
+    var filteredExercises: [WorkoutExercise] = []
     let persistenceStore: PersistenceStore
     var onError: ((String) -> Void)?
     
@@ -24,7 +24,7 @@ class ExerciseViewModel {
         
         do{
             let result = try persistenceStore.fetchExercises()
-            exercises = result.map{ $0.name }
+            exercises = result
         }catch let error as PersistenceStoreError{
             onError?(error.errorDescription)
         } catch {
@@ -48,7 +48,7 @@ class ExerciseViewModel {
     }
     
     func updateSearchingRange(searchText: String){
-        filteredExercises = exercises.filter { $0.lowercased().contains(searchText.lowercased())}
+        filteredExercises = exercises.filter { $0.name.lowercased().contains(searchText.lowercased())}
     }
     
 }

@@ -9,6 +9,17 @@ import UIKit
 
 class WorkoutsVC: UIViewController {
 
+    let viewModel: WorkoutViewModel
+    
+    init(persistenceStore: any PersistenceStore) {
+        viewModel = WorkoutViewModel(persistenceStore: persistenceStore)
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configure()
@@ -47,7 +58,7 @@ extension WorkoutsVC: UISearchResultsUpdating{
 extension WorkoutsVC{
     @objc func addButtonTapped(){
         
-        let nextVC = CreateWorkoutVC()
+        let nextVC = CreateWorkoutVC(persistenceStore: viewModel.persistenceStore)
         
         nextVC.hidesBottomBarWhenPushed = true
         

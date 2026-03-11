@@ -12,4 +12,5 @@ protocol PersistenceStore {
     func fetchExercises() throws -> [WorkoutExercise]
     func deleteAllExercises() throws
     func deleteExercise(withName name: String) throws
+    func saveWorkout(workout: Workout) throws
 }
