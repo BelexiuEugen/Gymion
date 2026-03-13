@@ -37,11 +37,12 @@ class GymionTextField: UITextField {
     }
     
     func configureRowTextField(){
+        self.translatesAutoresizingMaskIntoConstraints = false
         self.backgroundColor = UIColor.systemGray6
         self.textAlignment = .center
         self.layer.cornerRadius = 8
-        self.keyboardType = .decimalPad
         self.font = .boldSystemFont(ofSize: 16)
+        self.keyboardType = .numbersAndPunctuation
         self.returnKeyType = .done
     }
     

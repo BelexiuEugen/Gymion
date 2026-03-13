@@ -15,8 +15,8 @@ struct WorkoutExercise {
 
 struct ExerciseSet {
     var setNumber: Int?
-    let weight: Double?
-    let reps: Int?
+    var weight: Double?
+    var reps: Int?
 }
 
 struct ExerciseEntry {

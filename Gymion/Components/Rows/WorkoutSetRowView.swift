@@ -7,6 +7,10 @@ class WorkoutSetRowView: UIView {
     let previousLabel = GymionLabel(text: "", textAlignment: .center, font: .boldSystemFont(ofSize: 16), textColor: .systemGray)
     let weightTextField = GymionTextField(style: .setRow)
     let repsTextField = GymionTextField(style: .setRow)
+    
+    var onWeightChange: ((Double) -> ())?
+    var onRepsChange: ((Int) -> ())?
+    
     var isHeader: Bool
     
     // Constants
@@ -34,9 +38,6 @@ class WorkoutSetRowView: UIView {
     private func configureTextFields() {
         weightTextField.delegate = self
         repsTextField.delegate = self
-        // Ensure numeric keypad for digit input
-        weightTextField.keyboardType = .numberPad
-        repsTextField.keyboardType = .numberPad
     }
     
     private func clearBackgrounds(){
@@ -102,15 +103,35 @@ extension WorkoutSetRowView: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         // Allow deletions
         if string.isEmpty { return true }
-        // Only allow digits 0-9
-        if string.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) != nil { return false }
-        // Current text
+        
+        let allowedCharacter = CharacterSet.decimalDigits.union(CharacterSet(charactersIn: "."))
+        
+        if string.rangeOfCharacter(from: allowedCharacter.inverted) != nil { return false }
+        
+        guard let count = textField.text?.filter({ $0 == "."}).count else { return false}
+        
+        if string == "." && count > 0 { return false }
+        
         let currentText = textField.text ?? ""
         // Compute prospective text after the change
         guard let textRange = Range(range, in: currentText) else { return false }
         let updatedText = currentText.replacingCharacters(in: textRange, with: string)
         // Enforce max length
         return updatedText.count <= maxDigits
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        
+        guard
+            let text = textField.text,
+            let number = Double(text)
+        else { return }
+        
+        if textField == weightTextField{
+            onWeightChange?(number)
+            return
+        }
+        onRepsChange?(Int(number))
     }
 }
 

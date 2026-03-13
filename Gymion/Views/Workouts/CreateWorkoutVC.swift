@@ -11,6 +11,14 @@ class CreateWorkoutVC: UIViewController {
     
     var workoutTable: UITableView = UITableView()
     let viewModel: CreateWorkoutViewModel
+
+    // MARK: – Section drag state
+    private var draggingSourceSection: Int?
+    private var draggingCurrentSection: Int?
+    private var snapshotView: UIView?
+    private var dragInitialTouchY: CGFloat = 0
+    private var dragInitialSnapshotCenterY: CGFloat = 0
+    private var lastDragTouchY: CGFloat = 0
     
     init(persistenceStore: any PersistenceStore){
         self.viewModel = CreateWorkoutViewModel(persistenceStore: persistenceStore)
@@ -91,6 +99,12 @@ class CreateWorkoutVC: UIViewController {
             fotterAddExerciseButton.leadingAnchor.constraint(equalTo: workoutTable.leadingAnchor),
             fotterAddExerciseButton.trailingAnchor.constraint(equalTo: workoutTable.trailingAnchor)
         ])
+
+        // Long-press drives the Strong-style section reorder.
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleSectionDrag(_:)))
+        longPress.minimumPressDuration = 0.4
+        longPress.delegate = self
+        workoutTable.addGestureRecognizer(longPress)
     }
     
     func configureAddExerciseButton() -> UIView {
@@ -191,33 +205,79 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     // Header
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let headerStack = GymionStack(axis: .vertical, spacing: 8)
-//        let verticalStack = GymionStack(axis: .horizontal)
-        
-        let exerciseName = viewModel.exerciseEntries[section].exercise.name
-        
-        let label = GymionLabel(text: exerciseName, textAlignment: .left, style: .blueTitle)
-        let row = WorkoutSetRowView(setName: "Sets", previousLabel: "Previous", weight: "KG", reps: "Reps", isHeader: true)
-        headerStack.addArrangedSubviews(label, row)
+        let verticalStack = GymionStack(axis: .horizontal)
 
-        return headerStack.addContainer(width: tableView.frame.width, containerHeight: 80, viewHeight: 70)
+        let exerciseName = viewModel.exerciseEntries[section].exercise.name
+        let label = GymionLabel(text: exerciseName, textAlignment: .left, style: .blueTitle)
+
+        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self]_ in
+            self?.viewModel.deleteSection(section: section)
+            tableView.performBatchUpdates {
+                tableView.deleteSections(IndexSet(integer: section), with: .automatic)
+            } completion: { _ in
+                tableView.reloadData()
+            }
+        }
+
+        verticalStack.addArrangedSubviews(label)
+
+        if !viewModel.isHeaderSelected {
+            let spacer = UIView()
+            spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            let menuOptions = GymionButton(style: .menu, action: ())
+            menuOptions.menu = UIMenu(title: "menu", children: [deleteAction])
+            menuOptions.showsMenuAsPrimaryAction = true
+            verticalStack.addArrangedSubviews(spacer, menuOptions)
+        }
+
+        headerStack.addArrangedSubview(verticalStack)
+
+        if !viewModel.isHeaderSelected {
+            let row = WorkoutSetRowView(setName: "Sets", previousLabel: "Previous", weight: "KG", reps: "Reps", isHeader: true)
+            headerStack.addArrangedSubview(row)
+        }
+        
+        let container = headerStack.addContainer(width: tableView.frame.width, containerHeight: 80, viewHeight: 70)
+        container.tag = section + 1000
+        // While its snapshot floats above, hide the original slot completely.
+        label.alpha = (draggingSourceSection == section) ? 0 : 1
+        return container
     }
+    
     
     //Footer
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         
-        let button = GymionButton(style: .addSet, action: self.addNewSetFor(section: section))
-        button.tag = section
+        if !viewModel.isHeaderSelected{
+            
+            let button = GymionButton(style: .addSet, action: self.addNewSetFor(section: section))
+            button.tag = section
+            
+            return button.addContainer(width: tableView.frame.width, containerHeight: 70, viewHeight: 30)
+        }
         
-        return button.addContainer(width: tableView.frame.width, containerHeight: 70, viewHeight: 30)
+        return nil
     }
     
     // Footer Height
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        if viewModel.isHeaderSelected { return 0}
         return 70
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if viewModel.isHeaderSelected {
+            return 50
+        }
         return 80
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if viewModel.isHeaderSelected {
+            return 0
+        }
+        
+        return 60
     }
     
     // Drag
@@ -248,10 +308,15 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
         let sectionNumber = viewModel.exerciseEntries[section].sets.count
         return sectionNumber
     }
+
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = UITableViewCell()
+
+        
+        guard !viewModel.isHeaderSelected else { return cell }
+        
         cell.selectionStyle = .none
         
         let section = indexPath.section
@@ -274,7 +339,23 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
             perviousLabel = weightString + " x " + repsString
         }
         
-        let rowView = WorkoutSetRowView(setName: setNameString, previousLabel: perviousLabel ?? "", weight: weightString, reps: repsString)
+        let rowView = WorkoutSetRowView(
+            setName: setNameString,
+            previousLabel: perviousLabel ?? "",
+            weight: weightString,
+            reps: repsString,
+        )
+        
+        rowView.onRepsChange = { [weak self] repCount in
+            guard let self else { return }
+            viewModel.exerciseEntries[section].sets[row].reps = repCount
+        }
+        
+        rowView.onWeightChange = { [weak self] weightCount in
+            guard let self else { return }
+            viewModel.exerciseEntries[section].sets[row].weight = weightCount
+        }
+        
         rowView.translatesAutoresizingMaskIntoConstraints = false
         
         cell.contentView.addSubview(rowView)
@@ -341,8 +422,142 @@ extension CreateWorkoutVC: UITableViewDelegate, UITableViewDataSource, UITableVi
     // When Row Moved
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         print("I was moved from: ", sourceIndexPath.row, " To: ", destinationIndexPath.row)
-//        viewModel.calculateNewPosition
+        viewModel.moveIndexFrom(section: sourceIndexPath.section, row: sourceIndexPath.row, to: destinationIndexPath.row)
+        
+        tableView.reloadSections(IndexSet(integer: sourceIndexPath.section), with: .automatic)
     }
     
 }
 
+extension CreateWorkoutVC: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // Only allow our custom long press to fire if the user is touching a header.
+        // This prevents interference with the table's native row dragging.
+        let touchPoint = touch.location(in: workoutTable)
+        return headerSection(at: touchPoint) != nil
+    }
+}
+
+extension CreateWorkoutVC {
+
+    @objc func handleSectionDrag(_ gesture: UILongPressGestureRecognizer) {
+        print("i'm here ?")
+        let touchPoint = gesture.location(in: workoutTable)
+
+        switch gesture.state {
+
+        case .began:
+            guard let section = headerSection(at: touchPoint),
+                  let headerView = findHeaderView(forSection: section) else { return }
+
+            let frameInView = workoutTable.convert(headerView.frame, to: view)
+
+            // Render a compact version of the header for the snapshot.
+            viewModel.isHeaderSelected = true
+            draggingSourceSection = nil // Ensure alpha is 1 for the render
+            guard let compactHeader = self.tableView(workoutTable, viewForHeaderInSection: section) else { return }
+            compactHeader.frame = CGRect(x: 0, y: 0, width: headerView.frame.width, height: 50)
+            compactHeader.layoutIfNeeded()
+
+            let renderer = UIGraphicsImageRenderer(bounds: compactHeader.bounds)
+            let image = renderer.image { ctx in
+                compactHeader.layer.render(in: ctx.cgContext)
+            }
+            let snapshot = UIImageView(image: image)
+
+            draggingSourceSection = section
+            draggingCurrentSection = section
+
+            snapshot.frame = CGRect(x: frameInView.minX, y: frameInView.minY, width: frameInView.width, height: 50)
+            view.addSubview(snapshot)
+            snapshotView = snapshot
+
+            dragInitialTouchY = touchPoint.y
+            lastDragTouchY = touchPoint.y
+            dragInitialSnapshotCenterY = snapshot.center.y
+
+            let allSections = IndexSet(integersIn: 0..<workoutTable.numberOfSections)
+            workoutTable.reloadSections(allSections, with: .fade)
+
+            UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0.2) {
+                snapshot.transform = CGAffineTransform(scaleX: 1.04, y: 1.04)
+                snapshot.layer.shadowColor = UIColor.black.cgColor
+                snapshot.layer.shadowOpacity = 0.28
+                snapshot.layer.shadowOffset = CGSize(width: 0, height: 8)
+                snapshot.layer.shadowRadius = 12
+            }
+
+        case .changed:
+            guard let snapshot = snapshotView, let current = draggingCurrentSection else { return }
+
+            let delta = touchPoint.y - dragInitialTouchY
+            snapshot.center.y = dragInitialSnapshotCenterY + delta
+
+            let deltaY = touchPoint.y - lastDragTouchY
+            lastDragTouchY = touchPoint.y
+
+            // Directional hit-testing prevents jitter when the dragged section height is 0.
+            var newCurrent = current
+            if deltaY > 0 {
+                while newCurrent < workoutTable.numberOfSections - 1 {
+                    let rect = workoutTable.rect(forSection: newCurrent + 1)
+                    if touchPoint.y > rect.midY { newCurrent += 1 } else { break }
+                }
+            } else if deltaY < 0 {
+                while newCurrent > 0 {
+                    let rect = workoutTable.rect(forSection: newCurrent - 1)
+                    if touchPoint.y < rect.midY { newCurrent -= 1 } else { break }
+                }
+            }
+
+            if newCurrent != current {
+                viewModel.moveSection(from: current, to: newCurrent)
+                workoutTable.moveSection(current, toSection: newCurrent)
+                draggingSourceSection = newCurrent
+                draggingCurrentSection = newCurrent
+            }
+
+        case .ended, .cancelled, .failed:
+            endSectionDrag()
+
+        default:
+            break
+        }
+    }
+
+    // MARK: Helpers
+
+    private func findHeaderView(forSection section: Int) -> UIView? {
+        // Since we return a plain UIView from viewForHeaderInSection, 
+        // workoutTable.headerView(forSection:) is nil. We find it by its unique tag.
+        return workoutTable.viewWithTag(section + 1000)
+    }
+
+    /// Section whose header rect contains the given table-coordinate point.
+    private func headerSection(at point: CGPoint) -> Int? {
+        for i in 0..<workoutTable.numberOfSections {
+            let rect = workoutTable.rect(forSection: i)
+            // Use the full rect height (header + rows + footer) for hit testing.
+            let headerRect = CGRect(x: rect.minX, y: rect.minY,
+                                    width: rect.width,
+                                    height: workoutTable.delegate?.tableView?(workoutTable, heightForHeaderInSection: i) ?? 80)
+            if headerRect.contains(point) { return i }
+        }
+        return nil
+    }
+
+    private func endSectionDrag() {
+        guard let snapshot = snapshotView else { return }
+        UIView.animate(withDuration: 0.2, animations: {
+            snapshot.transform = .identity
+            snapshot.alpha = 0
+        }, completion: { _ in
+            snapshot.removeFromSuperview()
+        })
+        snapshotView = nil
+        draggingSourceSection = nil
+        draggingCurrentSection = nil
+        viewModel.isHeaderSelected = false
+        workoutTable.reloadData()
+    }
+}

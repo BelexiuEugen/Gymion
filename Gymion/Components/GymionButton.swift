@@ -15,6 +15,7 @@ class GymionButton: UIButton {
         case adding
         case addExercise
         case addSet
+        case menu
     }
     
     private var action: UIAction
@@ -40,6 +41,8 @@ class GymionButton: UIButton {
             configureAddExercise()
         case .addSet:
             configureAddSet()
+        case .menu:
+            configureMenu()
         }
     }
     
@@ -68,7 +71,7 @@ class GymionButton: UIButton {
     }
     
     func confiugreDismissingButton(){
-        let config = createSettingsForDismissButton()
+        let config = createSettingsForDismissButton(systemName: "xmark", foregroundColor: .black, backgroundColor: .systemGray5)
         self.configuration = config
         self.addAction(action, for: .touchUpInside)
     }
@@ -106,6 +109,13 @@ class GymionButton: UIButton {
         
         self.addAction(action, for: .touchUpInside)
     }
+    
+    func configureMenu(){
+        let config = createSettingsForDismissButton(systemName: "ellipsis", foregroundColor: .darkBlue, backgroundColor: .lightBlue)
+        self.configuration = config
+        self.addAction(action, for: .touchUpInside)
+        
+    }
 
 }
 
@@ -117,13 +127,13 @@ extension GymionButton{
         }
     }
     
-    func createSettingsForDismissButton() -> UIButton.Configuration{
+    func createSettingsForDismissButton(systemName: String, foregroundColor: UIColor, backgroundColor: UIColor) -> UIButton.Configuration{
         var config = UIButton.Configuration.filled()
-        config.baseForegroundColor = .black
-        config.baseBackgroundColor = .systemGray5
+        config.baseForegroundColor = foregroundColor
+        config.baseBackgroundColor = backgroundColor
         
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .bold)
-        config.image = UIImage(systemName: "xmark", withConfiguration: symbolConfig)
+        config.image = UIImage(systemName: systemName, withConfiguration: symbolConfig)
         config.cornerStyle = .large
         
         return config
